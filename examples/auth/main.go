@@ -11,6 +11,7 @@ import (
 	"github.com/xelaj/go-dry"
 	"github.com/xelaj/mtproto"
 	"github.com/xelaj/mtproto/telegram"
+	"golang.org/x/net/proxy"
 )
 
 func main() {
@@ -30,13 +31,21 @@ func main() {
 		PublicKeysFile: "/home/me/.local/var/lib/mtproto/tg_public_keys.pem",
 		AppID:          94575,                              // app id, could be find at https://my.telegram.org
 		AppHash:        "a3406de8d171bb422bb6ddf3bbd800e2", // app hash, could be find at https://my.telegram.org
+		ProxyDialer: telegram.NewSOCK5ProxyDialer("tcp",
+			"106.53.131.105:65431",
+			&proxy.Auth{
+				User:     "Kassulke8264",
+				Password: "wFKo1z8xOr",
+			}),
 	})
-	dry.PanicIfErr(err)
+	// dry.PanicIfErr(err)
 
+	fmt.Println(client.HelpGetConfig())
+	fmt.Println("sdafds")
 	setCode, err := client.AuthSendCode(&telegram.AuthSendCodeParams{
 		phoneNumber, 94575, "a3406de8d171bb422bb6ddf3bbd800e2", &telegram.CodeSettings{},
 	})
-	dry.PanicIfErr(err)
+	// dry.PanicIfErr(err)
 	pp.Println(setCode)
 
 	fmt.Print("Auth code:")

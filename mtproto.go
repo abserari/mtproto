@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xelaj/errs"
 	"github.com/xelaj/go-dry"
+	"golang.org/x/net/proxy"
 
 	"github.com/xelaj/mtproto/serialize"
 	"github.com/xelaj/mtproto/utils"
@@ -29,6 +30,7 @@ type MTProto struct {
 	// хеш ключа авторизации. изменять можно только через setAuthKey
 	authKeyHash []byte
 
+	dailer proxy.Dialer
 	// соль сессии
 	serverSalt int64
 	encrypted  bool
@@ -85,11 +87,13 @@ type Config struct {
 	AuthKeyFile string
 	ServerHost  string
 	PublicKey   *rsa.PublicKey
+	Dailer      proxy.Dialer
 }
 
 func NewMTProto(c Config) (*MTProto, error) {
 	m := new(MTProto)
 	m.tokensStorage = c.AuthKeyFile
+	m.dailer = c.Dailer
 
 	err := m.LoadSession()
 	if err == nil {
@@ -140,13 +144,16 @@ func (m *MTProto) Stop() error {
 
 func (m *MTProto) CreateConnection() error {
 	// connect
-	tcpAddr, err := net.ResolveTCPAddr("tcp", m.addr)
-	if err != nil {
-		return errors.Wrap(err, "resolving tcp")
-	}
-	m.conn, err = net.DialTCP("tcp", nil, tcpAddr)
+	conn, err := m.dailer.Dial("tcp", m.addr)
+	// m.conn, err = net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
 		return errors.Wrap(err, "dialing tcp")
+	}
+
+	if tcpconn, ok := conn.(*net.TCPConn); ok {
+		m.conn = tcpconn
+	} else {
+		return errors.Wrap(err, "not tcp conn from custom dailer ")
 	}
 
 	// https://core.telegram.org/mtproto/mtproto-transports#intermediate

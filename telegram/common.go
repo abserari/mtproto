@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xelaj/errs"
 	dry "github.com/xelaj/go-dry"
+	"golang.org/x/net/proxy"
 
 	"github.com/xelaj/mtproto"
 	"github.com/xelaj/mtproto/keys"
@@ -29,6 +30,7 @@ type ClientConfig struct {
 	AppVersion     string
 	AppID          int
 	AppHash        string
+	ProxyDialer    proxy.Dialer
 }
 
 func NewClient(c ClientConfig) (*Client, error) { //nolint: gocritic arg is not ptr cause we call
@@ -63,6 +65,7 @@ func NewClient(c ClientConfig) (*Client, error) { //nolint: gocritic arg is not 
 		AuthKeyFile: c.SessionFile,
 		ServerHost:  c.ServerHost,
 		PublicKey:   publicKeys[0],
+		Dailer:      c.ProxyDialer,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "setup common MTProto client")
@@ -93,7 +96,6 @@ func NewClient(c ClientConfig) (*Client, error) { //nolint: gocritic arg is not 
 	if err != nil {
 		return nil, errors.Wrap(err, "getting server configs")
 	}
-
 	config, ok := resp.(*Config)
 	if !ok {
 		return nil, errors.New("got wrong response: " + reflect.TypeOf(resp).String())
@@ -110,7 +112,6 @@ func NewClient(c ClientConfig) (*Client, error) { //nolint: gocritic arg is not 
 		dcList[int(dc.Id)] = dc.IpAddress
 	}
 	client.SetDCStorages(dcList)
-
 	return client, nil
 }
 
