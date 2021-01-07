@@ -40,9 +40,9 @@ func main() {
 	})
 	dry.PanicIfErr(err)
 
-	setCode, err := client.AuthSendCode(&telegram.AuthSendCodeParams{
+	setCode, err := client.AuthSendCode(
 		phoneNumber, 94575, "a3406de8d171bb422bb6ddf3bbd800e2", &telegram.CodeSettings{},
-	})
+	)
 	dry.PanicIfErr(err)
 	pp.Println(setCode)
 
@@ -50,11 +50,11 @@ func main() {
 	code, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	code = strings.ReplaceAll(code, "\n", "")
 
-	auth, err := client.AuthSignIn(&telegram.AuthSignInParams{
-		PhoneNumber:   phoneNumber,
-		PhoneCodeHash: setCode.PhoneCodeHash,
-		PhoneCode:     code,
-	})
+	auth, err := client.AuthSignIn(
+		phoneNumber,
+		setCode.PhoneCodeHash,
+		code,
+	)
 	if err == nil {
 		pp.Println(auth)
 
@@ -87,9 +87,7 @@ func main() {
 	inputCheck, err := telegram.GetInputCheckPassword(password, accountPassword)
 	dry.PanicIfErr(err)
 
-	auth, err = client.AuthCheckPassword(&telegram.AuthCheckPasswordParams{
-		Password: inputCheck,
-	})
+	auth, err = client.AuthCheckPassword(inputCheck)
 	dry.PanicIfErr(err)
 
 	pp.Println(auth)

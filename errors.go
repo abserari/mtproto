@@ -9,8 +9,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-  "github.com/xelaj/go-dry"
-  "github.com/xelaj/mtproto/serialize"
+	"github.com/xelaj/go-dry"
+
+	"github.com/xelaj/mtproto/internal/mtproto/objects"
 )
 
 type ErrResponseCode struct {
@@ -20,7 +21,7 @@ type ErrResponseCode struct {
 	AdditionalInfo interface{} // some errors has additional data like timeout seconds, dc id etc.
 }
 
-func RpcErrorToNative(r *serialize.RpcError) error {
+func RpcErrorToNative(r *objects.RpcError) error {
 	nativeErrorName, additionalData := TryExpandError(r.ErrorMessage)
 
 	desc, ok := errorMessages[nativeErrorName]
@@ -81,7 +82,7 @@ func TryExpandError(errStr string) (nativeErrorName string, additionalData inter
 	nativeErrorName = choosedPrefixSuffix.prefix + "X" + choosedPrefixSuffix.suffix
 	trimmedData := strings.TrimSuffix(strings.TrimPrefix(errStr, choosedPrefixSuffix.prefix), choosedPrefixSuffix.suffix)
 
-	switch v := choosedPrefixSuffix.kind; v {
+	switch v := choosedPrefixSuffix.kind; v { //nolint:exhaustive others will panic
 	case reflect.Int:
 		var err error
 		additionalData, err = strconv.Atoi(trimmedData)
@@ -439,11 +440,11 @@ var errorMessages = map[string]string{
 }
 
 type BadMsgError struct {
-	*serialize.BadMsgNotification
+	*objects.BadMsgNotification
 	Description string
 }
 
-func BadMsgErrorFromNative(in *serialize.BadMsgNotification) *BadMsgError {
+func BadMsgErrorFromNative(in *objects.BadMsgNotification) *BadMsgError {
 	return &BadMsgError{
 		BadMsgNotification: in,
 		Description:        badMsgErrorCodes[uint8(in.Code)],

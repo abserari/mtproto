@@ -1,12 +1,18 @@
+// Copyright (c) 2020 KHS Films
+//
+// This file is a part of mtproto package.
+// See https://github.com/xelaj/mtproto/blob/master/LICENSE for details
+
 package mtproto
 
 import (
 	"fmt"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/xelaj/go-dry"
 
-	"github.com/xelaj/mtproto/serialize"
+	"github.com/xelaj/mtproto/encoding/tl"
 	"github.com/xelaj/mtproto/utils"
 )
 
@@ -60,12 +66,15 @@ func (m *MTProto) SetAuthKey(key []byte) {
 	m.authKeyHash = utils.AuthKeyHash(m.authKey)
 }
 
-func (m *MTProto) MakeRequest(msg serialize.TL) (serialize.TL, error) {
-	return m.makeRequest(msg, nil)
+func (m *MTProto) MakeRequest(msg tl.Object) (interface{}, error) {
+	return m.makeRequest(msg)
 }
 
-func (m *MTProto) MakeRequestAsSlice(msg serialize.TL, as reflect.Type) (serialize.TL, error) {
-	return m.makeRequest(msg, as)
+func (m *MTProto) MakeRequestWithHintToDecoder(msg tl.Object, expectedTypes ...reflect.Type) (interface{}, error) {
+	if len(expectedTypes) == 0 {
+		return nil, errors.New("expected a few hints. If you don't need it, use m.MakeRequest")
+	}
+	return m.makeRequest(msg, expectedTypes...)
 }
 
 func (m *MTProto) recoverGoroutine() {
